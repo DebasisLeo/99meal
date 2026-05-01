@@ -1,0 +1,25 @@
+import { useQuery } from "@tanstack/react-query";
+import { useContext } from "react";
+import { AuthContext } from "../providers/AuthProvider";
+import useAuth from "./useAuth";
+
+
+
+const useAdmin = () => {
+    const { user,loading} =useAuth();
+
+    const { data: isAdmin, isPending: isAdminLoading } = useQuery({
+        queryKey: ['isAdmin', user?.email],
+        enabled: !loading && !!user?.email,
+        queryFn: async () => {
+            const res = await fetch(`http://localhost:8000/users/admin/${user.email}`);
+            const data = await res.json();
+            
+            return data.admin; 
+        }
+    });
+
+    return [isAdmin, isAdminLoading];
+};
+
+export default useAdmin;
