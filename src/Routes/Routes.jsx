@@ -11,6 +11,14 @@ import Cart from "../pages/Dashboard/cart/Cart";
 import NotFoundPage from "../pages/NotFoundPage";
 import AllUsers from "../pages/Dashboard/AllUsers/AllUsers";
 import History from "../pages/History/History";
+import AdminRoute from "./AdminRoute";
+import AddItems from "../pages/Dashboard/AddItems/AddItems";
+import AdminHome from "../pages/Dashboard/AdminHome/AdminHome";
+import ManageItems from "../pages/Dashboard/ManageItems/ManageItems";
+import UpdateItem from "../pages/Dashboard/UpdateItem/UpdateItem";
+import Payment from "../pages/Dashboard/Payment/Payment";
+import PaymentHistory from "../pages/Dashboard/PaymentHistory/PaymentHistory";
+import UserHome from "../pages/Dashboard/UserHome/UserHome";
 
 
 export const router = createBrowserRouter([
@@ -50,8 +58,39 @@ export const router = createBrowserRouter([
         element: <Cart />
       },
       {
-        path: "allusers",
-        element: <AllUsers></AllUsers>
+        path: 'userHome',
+        element: <UserHome></UserHome>
+      },
+      {
+        path: 'payment',
+        element: <Payment></Payment>
+      },
+      {
+        path: 'paymentHistory',
+        element: <PaymentHistory></PaymentHistory>
+      },
+
+      // admin only routes
+      {
+        path: 'adminHome',
+        element: <AdminRoute><AdminHome></AdminHome></AdminRoute>
+      },
+      {
+        path: "users",
+        element: <AdminRoute><AllUsers></AllUsers></AdminRoute>
+      },
+      {
+        path: 'addItems',
+        element: <AdminRoute><AddItems></AddItems></AdminRoute>
+      },
+      {
+        path: 'manageItems',
+        element: <AdminRoute><ManageItems></ManageItems></AdminRoute>
+      },
+      {
+        path: 'updateItem/:id',
+        element: <AdminRoute><UpdateItem></UpdateItem></AdminRoute>,
+        loader: ({params}) => fetch(`http://localhost:8000/menu/${params.id}`)
       },
       {
         path: "history",
