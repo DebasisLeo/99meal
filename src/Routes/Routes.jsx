@@ -19,6 +19,11 @@ import UpdateItem from "../pages/Dashboard/UpdateItem/UpdateItem";
 import Payment from "../pages/Dashboard/Payment/Payment";
 import PaymentHistory from "../pages/Dashboard/PaymentHistory/PaymentHistory";
 import UserHome from "../pages/Dashboard/UserHome/UserHome";
+import Inventory from "../pages/Inventory/Inventory";
+import Kitchen from "../pages/Kitchen/Kitchen";
+import PurchaseOrder from "../pages/PurchaseOrder/PurchaseOrder";
+import StaffManagement from "../pages/StaffManagement/StaffManagement";
+import Supplier from "../pages/Supplier/Supplier";
 
 
 export const router = createBrowserRouter([
@@ -34,6 +39,30 @@ export const router = createBrowserRouter([
       {
         path: "menu",
         element: <Menu />
+      },
+      {
+        path: "inventory",
+        element: <Inventory />
+      },
+      {
+        path: "kitchen",
+        element: <Kitchen />
+      },
+      {
+        path: "purchase-orders",
+        element:<PurchaseOrder />
+      },
+      {
+        path: "staff",
+        element: <StaffManagement />
+      },
+      {
+        path: "suppliers",
+        element: <Supplier />
+      },
+      {
+        path: "supplier",
+        element:<Supplier />
       },
       {
         path: "order/:category",
@@ -66,6 +95,10 @@ export const router = createBrowserRouter([
         element: <Payment></Payment>
       },
       {
+        path: 'checkout',
+        element: <Payment></Payment>
+      },
+      {
         path: 'paymentHistory',
         element: <PaymentHistory></PaymentHistory>
       },
@@ -95,6 +128,30 @@ export const router = createBrowserRouter([
       {
         path: "history",
         element: <History></History>
+      },
+      {
+        path: "inventory",
+        element: <AdminRoute><Inventory /></AdminRoute>
+      },
+      {
+        path: "kitchen",
+        element: <AdminRoute><Kitchen /></AdminRoute>
+      },
+      {
+        path: "purchase-orders",
+        element: <AdminRoute><PurchaseOrder /></AdminRoute>
+      },
+      {
+        path: "staff",
+        element: <AdminRoute><StaffManagement /></AdminRoute>
+      },
+      {
+        path: "suppliers",
+        element: <AdminRoute><Supplier /></AdminRoute>
+      },
+      {
+        path: "supplier",
+        element: <AdminRoute><Supplier /></AdminRoute>
       }
       
     ]

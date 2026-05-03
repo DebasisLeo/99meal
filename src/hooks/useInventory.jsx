@@ -19,9 +19,24 @@ export function getInventoryItems() {
   return inventorySnapshot
 }
 
+function resolveInventoryItem(items, identifier) {
+  return items.find((item) => {
+    const candidates = [item.id, item.ingredientId, item.ingredientSku, item.name]
+      .filter(Boolean)
+      .map((value) => String(value).toLowerCase())
+
+    return candidates.includes(String(identifier).toLowerCase())
+  })
+}
+
 export function adjustInventoryStock(sku, delta) {
   inventorySnapshot = inventorySnapshot.map((it) => {
-    if (it.id !== sku && it.ingredientId !== sku) return it
+    const matches = [it.id, it.ingredientId, it.ingredientSku, it.name]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase() === String(sku).toLowerCase())
+
+    if (!matches) return it
+
     const nextStock = Math.max(0, it.stock + delta)
     return { ...it, stock: nextStock, status: computeInventoryStatus(nextStock, it.min) }
   })
@@ -37,6 +52,8 @@ function normalizeInventoryItem(item) {
     ...item,
     id,
     ingredientId,
+    ingredientSku: item.ingredientSku ?? item.ingredient_sku ?? item.sku ?? item.name,
+    name: item.name || item.ingredient_name || item.title || 'Unnamed ingredient',
     unit: item.unit || 'pcs',
     stock,
     min,
@@ -72,7 +89,7 @@ export default function useInventory() {
   }, [fetchInventory])
 
   async function adjustStock(id, delta) {
-    const current = items.find((it) => it.id === id)
+    const current = resolveInventoryItem(items, id)
     if (!current) return
 
     const nextStock = Math.max(0, current.stock + delta)

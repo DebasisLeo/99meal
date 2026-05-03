@@ -1,20 +1,103 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import Swal from 'sweetalert2'
+import useAxiosPublic from '../../hooks/useAxiosPublic'
 import useInventoryDeduction from '../../hooks/useInventoryDeduction'
-import useKitchenOrders from '../../hooks/useKitchenOrders'
-import useSupplier from '../../hooks/useSupplier'
+import useMenuIngredients from '../../hooks/useMenuIngredients'
+
+function groupRecipesByMenu(recipes = []) {
+  return recipes.reduce((groups, recipe) => {
+    const keys = [recipe.menuId, recipe.menuName].filter(Boolean).map((key) => String(key).toLowerCase())
+
+    keys.forEach((key) => {
+      groups[key] = [
+        ...(groups[key] || []),
+        {
+          ingredientSku: String(recipe.ingredientId),
+          ingredientId: recipe.ingredientId,
+          qty: Number(recipe.quantityRequired) || 0,
+          unit: recipe.unit,
+          name: recipe.ingredientName,
+        },
+      ]
+    })
+
+    return groups
+  }, {})
+}
+
+function paymentToKitchenOrder(payment, recipeGroups, statusOverride) {
+  return {
+    orderId: `PAY-${payment.id}`,
+    paymentId: payment.id,
+    customerEmail: payment.email || 'guest',
+    totalPrice: Number(payment.price || 0),
+    transactionId: payment.transactionId,
+    paymentStatus: payment.status,
+    kitchenStatus: statusOverride?.kitchenStatus || 'pending',
+    createdAt: payment.created_at || new Date().toISOString(),
+    acceptedAt: statusOverride?.acceptedAt || null,
+    rejectedAt: statusOverride?.rejectedAt || null,
+    deduction: statusOverride?.deduction || null,
+    items: (Array.isArray(payment.items) ? payment.items : []).map((item) => {
+      const menuIdKey = item?.id ? String(item.id).toLowerCase() : ''
+      const menuNameKey = item?.name ? String(item.name).toLowerCase() : ''
+
+      return {
+        id: item?.id,
+        name: item?.name || 'Unknown item',
+        price: Number(item?.price || 0),
+        quantity: Number(item?.quantity || 1),
+        ingredients: recipeGroups[menuIdKey] || recipeGroups[menuNameKey] || [],
+      }
+    }),
+  }
+}
 
 const Kitchen = () => {
+  const axiosPublic = useAxiosPublic()
+
   useEffect(() => {
     document.title = 'Rassporium | Kitchen'
   }, [])
 
-  const { orders, acceptOrder, rejectOrder } = useKitchenOrders()
+  const { recipes } = useMenuIngredients()
   const { deductForOrder, previewForOrder } = useInventoryDeduction()
-  const { suppliers } = useSupplier()
+  const [orderStatuses, setOrderStatuses] = useState({})
+  const recipeGroups = useMemo(() => groupRecipesByMenu(recipes), [recipes])
 
-  const supplierName = (supplierSku) =>
-    suppliers.find((supplier) => supplier.supplierSku === supplierSku)?.name || supplierSku
+  const { data: payments = [], isLoading: isPaymentsLoading } = useQuery({
+    queryKey: ['kitchen-payments'],
+    queryFn: async () => {
+      const response = await axiosPublic.get('/payments')
+      return Array.isArray(response.data) ? response.data : []
+    },
+  })
+
+  const orders = useMemo(
+    () =>
+      payments
+        .filter((payment) => payment.status === 'success')
+        .map((payment) => paymentToKitchenOrder(payment, recipeGroups, orderStatuses[payment.id])),
+    [payments, recipeGroups, orderStatuses]
+  )
+
+  const { data: orderStats = [], isLoading: isStatsLoading } = useQuery({
+    queryKey: ['order-stats'],
+    queryFn: async () => {
+      const response = await axiosPublic.get('/order-stats')
+      return response.data
+    },
+  })
+
+  const statsSummary = useMemo(
+    () => ({
+      categories: orderStats.length,
+      quantity: orderStats.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
+      revenue: orderStats.reduce((sum, item) => sum + Number(item.revenue || 0), 0),
+    }),
+    [orderStats]
+  )
 
   const handleAccept = (order) => {
     const result = deductForOrder(order.items)
@@ -28,7 +111,16 @@ const Kitchen = () => {
       return
     }
 
-    acceptOrder(order.orderId, result)
+    setOrderStatuses((prev) => ({
+      ...prev,
+      [order.paymentId]: {
+        kitchenStatus: 'accepted',
+        acceptedAt: new Date().toISOString(),
+        rejectedAt: null,
+        deduction: result,
+      },
+    }))
+
     Swal.fire({
       title: 'Order accepted',
       html: `<div class="text-left">
@@ -43,6 +135,18 @@ const Kitchen = () => {
       </div>`,
       icon: 'success',
     })
+  }
+
+  const handleReject = (order) => {
+    setOrderStatuses((prev) => ({
+      ...prev,
+      [order.paymentId]: {
+        kitchenStatus: 'rejected',
+        acceptedAt: null,
+        rejectedAt: new Date().toISOString(),
+        deduction: null,
+      },
+    }))
   }
 
   const pendingOrders = orders.filter((order) => order.kitchenStatus === 'pending')
@@ -95,7 +199,6 @@ const Kitchen = () => {
                         <th>Ingredient</th>
                         <th>Need</th>
                         <th>Stock</th>
-                        <th>Supplier</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -104,7 +207,6 @@ const Kitchen = () => {
                           <td>{item.name}</td>
                           <td>{item.requiredQty}</td>
                           <td>{item.available}</td>
-                          <td>{supplierName(item.supplierSku)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -116,7 +218,7 @@ const Kitchen = () => {
 
           {order.kitchenStatus === 'pending' && (
             <div className="card-actions justify-end mt-4">
-              <button className="btn btn-ghost btn-sm" onClick={() => rejectOrder(order.orderId)}>
+              <button className="btn btn-ghost btn-sm" onClick={() => handleReject(order)}>
                 Reject
               </button>
               <button className="btn btn-success btn-sm" onClick={() => handleAccept(order)}>
@@ -133,10 +235,65 @@ const Kitchen = () => {
     <div className="p-6">
       <header className="mb-6">
         <h2 className="text-2xl font-bold">Kitchen Orders</h2>
-        <p className="text-sm text-gray-400">Accept paid orders and deduct mapped ingredient inventory</p>
+        <p className="text-sm text-gray-400">Accept paid orders, deduct mapped ingredient inventory, and review paid-item stats</p>
       </header>
 
-      {orders.length === 0 ? (
+      <section className="mb-6 grid gap-4 lg:grid-cols-3">
+        <div className="card bg-base-200">
+          <div className="card-body">
+            <span className="text-sm text-gray-400">Paid categories</span>
+            <span className="text-2xl font-bold">{isStatsLoading ? '...' : statsSummary.categories}</span>
+          </div>
+        </div>
+        <div className="card bg-base-200">
+          <div className="card-body">
+            <span className="text-sm text-gray-400">Paid item count</span>
+            <span className="text-2xl font-bold">{isStatsLoading ? '...' : statsSummary.quantity}</span>
+          </div>
+        </div>
+        <div className="card bg-base-200">
+          <div className="card-body">
+            <span className="text-sm text-gray-400">Estimated revenue</span>
+            <span className="text-2xl font-bold">{isStatsLoading ? '...' : `$${statsSummary.revenue.toFixed(2)}`}</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="mb-8 card bg-base-200">
+        <div className="card-body">
+          <h3 className="card-title">Paid Orders by Category</h3>
+          {orderStats.length === 0 ? (
+            <p className="text-sm text-gray-400">No paid order stats available yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                    <th>Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orderStats.map((item) => (
+                    <tr key={item.category}>
+                      <td>{item.category}</td>
+                      <td>{Number(item.quantity || 0)}</td>
+                      <td>${Number(item.revenue || 0).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {isPaymentsLoading ? (
+        <div className="alert alert-info">
+          <span>Loading paid orders...</span>
+        </div>
+      ) : orders.length === 0 ? (
         <div className="alert alert-info">
           <span>No paid orders waiting for the kitchen yet.</span>
         </div>
