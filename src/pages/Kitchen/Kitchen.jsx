@@ -5,11 +5,19 @@ import useAxiosPublic from '../../hooks/useAxiosPublic'
 import useInventoryDeduction from '../../hooks/useInventoryDeduction'
 import useMenuIngredients from '../../hooks/useMenuIngredients'
 
+function normalizeLookupKey(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
 function groupRecipesByMenu(recipes = []) {
   return recipes.reduce((groups, recipe) => {
     const keys = [recipe.menuId, recipe.menuName]
       .filter(Boolean)
-      .map((key) => String(key).toLowerCase())
+      .map(normalizeLookupKey)
 
     keys.forEach((key) => {
       groups[key] = [
@@ -42,15 +50,20 @@ function paymentToKitchenOrder(payment, recipeGroups, statusOverride) {
     rejectedAt: statusOverride?.rejectedAt || null,
     deduction: statusOverride?.deduction || null,
     items: (Array.isArray(payment.items) ? payment.items : []).map((item) => {
-      const menuIdKey = item?.id ? String(item.id).toLowerCase() : ''
-      const menuNameKey = item?.name ? String(item.name).toLowerCase() : ''
+      const itemKeys = [item?.id, item?._id, item?.menuId, item?.menu_id, item?.name]
+        .filter(Boolean)
+        .map(normalizeLookupKey)
+      const ingredients = itemKeys.reduce(
+        (matchedIngredients, key) => matchedIngredients || recipeGroups[key],
+        null
+      )
 
       return {
-        id: item?.id,
+        id: item?.id || item?._id || item?.menuId,
         name: item?.name || 'Unknown item',
         price: Number(item?.price || 0),
         quantity: Number(item?.quantity || 1),
-        ingredients: recipeGroups[menuIdKey] || recipeGroups[menuNameKey] || [],
+        ingredients: ingredients || [],
       }
     }),
   }
@@ -86,7 +99,7 @@ const Kitchen = () => {
     [payments, recipeGroups, orderStatuses]
   )
 
-  const { data: orderStats = [], isLoading: isStatsLoading } = useQuery({
+  const { data: orderStats = [] } = useQuery({
     queryKey: ['order-stats'],
     queryFn: async () => {
       const response = await axiosPublic.get('/order-stats')

@@ -1,16 +1,33 @@
-# React + Vite
+# 99Meal
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## System Architecture
 
-Currently, two official plugins are available:
+The app uses a React + Vite frontend with a layered structure:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- `src/main.jsx` bootstraps the app, mounts React, and wraps the tree with `AuthProvider`, `QueryClientProvider`, and `RouterProvider`.
+- `src/Routes/Routes.jsx` defines the full navigation map with public routes, private routes, and admin-only routes.
+- `src/providers/AuthProvider.jsx` owns Firebase authentication state and exposes auth actions through context.
+- `src/Routes/PrivateRoute.jsx` and `src/Routes/AdminRoute.jsx` guard protected pages based on login and role state.
+- `src/Layout/Main.jsx` provides the shared public layout with navbar, footer, and routed page content.
+- `src/Layout/Dashboard.jsx` provides the dashboard shell for authenticated users.
+- `src/pages/` contains feature pages, while `src/Components/` contains reusable UI pieces.
 
-## React Compiler
+### Request Flow
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. The browser loads `index.html` and starts `src/main.jsx`.
+2. `RouterProvider` resolves the current route.
+3. Public pages render through `Main`, while dashboard pages render through `Dashboard`.
+4. Protected pages first pass through `PrivateRoute`; admin pages also pass through `AdminRoute`.
+5. Data access is handled by feature hooks in `src/hooks/` and shared API helpers in `src/utils/api.js`.
 
-## Expanding the ESLint configuration
+### Data and State Boundaries
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Authentication state lives in Firebase and is exposed through React context.
+- Server data is fetched through hooks and React Query where shared caching is useful.
+- Route-level loaders are used where a page needs data before rendering, such as item updates.
+
+### Project Notes
+
+- Keep shared layout logic in `src/Layout/`.
+- Keep route protection inside route guard components rather than inside page components.
+- Keep reusable UI in `src/Components/` and page-specific UI in `src/pages/`.

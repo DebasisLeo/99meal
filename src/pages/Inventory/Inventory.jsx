@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import InventoryList from '../../Components/Inventory/InventoryList'
 import useInventory from '../../hooks/useInventory'
+import useMenu from '../../hooks/useMenu'
 import useMenuIngredients from '../../hooks/useMenuIngredients'
 
 const emptyIngredientRow = { ingredientId: '', quantityRequired: '1' }
@@ -18,11 +19,62 @@ const categoryOptions = [
   { label: 'Curry Vuna', value: 'curry vuna' },
   { label: 'Vat Package', value: 'vat package' },
 ]
+const menuNameOptions = [
+  { label: 'Potato Wedges', value: 'Potato Wedges' },
+  { label: 'French Fries', value: 'French Fries' },
+  { label: 'Masala Fries', value: 'Masala Fries' },
+  { label: 'Cheese Fries', value: 'Cheese Fries' },
+  { label: 'Thai Fried Chicken', value: 'Thai Fried Chicken' },
+  { label: 'Crispy Fried Chicken', value: 'Crispy Fried Chicken' },
+  { label: 'BBQ Chicken Wings', value: 'BBQ Chicken Wings' },
+  { label: 'Spicy Chicken Wings', value: 'Spicy Chicken Wings' },
+  { label: 'Honey Glazed Wings', value: 'Honey Glazed Wings' },
+  { label: 'Chicken Soup', value: 'Chicken Soup' },
+  { label: 'Vegetable Soup', value: 'Vegetable Soup' },
+  { label: 'Thai Soup', value: 'Thai Soup' },
+  { label: 'Chicken Biriyani', value: 'Chicken Biriyani' },
+  { label: 'Beef Biriyani', value: 'Beef Biriyani' },
+  { label: 'Mutton Biriyani', value: 'Mutton Biriyani' },
+  { label: 'Chicken Kacchi', value: 'Chicken Kacchi' },
+  { label: 'Sada Vat', value: 'Sada Vat' },
+  { label: 'Egg', value: 'Egg' },
+  { label: 'Dal Vaji / Mug Dal', value: 'Dal Vaji / Mug Dal' },
+  { label: 'Murgi Vuna', value: 'Murgi Vuna' },
+  { label: 'Jhal Fry', value: 'Jhal Fry' },
+  { label: 'Beef Vuna', value: 'Beef Vuna' },
+  { label: 'Mach Vuna', value: 'Mach Vuna' },
+  { label: 'Vat + Bhorta + Jhal Fry + Dal', value: 'Vat + Bhorta + Jhal Fry + Dal' },
+  { label: 'Vat + Vaji + Mach Vuna + Dal', value: 'Vat + Vaji + Mach Vuna + Dal' },
+  { label: 'Vat + Bhorta + Dim + Dal', value: 'Vat + Bhorta + Dim + Dal' },
+  { label: 'Haddock', value: 'Haddock' },
+  { label: 'Escalope de Veau', value: 'Escalope de Veau' },
+  { label: 'Roast Duck Breast', value: 'Roast Duck Breast' },
+  { label: 'Breton Fish Stew', value: 'Breton Fish Stew' },
+  { label: 'Chicken and Walnut Salad', value: 'Chicken and Walnut Salad' },
+  { label: 'Fish Parmentier', value: 'Fish Parmentier' },
+  { label: 'Tuna Nicoise', value: 'Tuna Nicoise' },
+  { label: 'Goats Cheese Pizza', value: 'Goats Cheese Pizza' },
+  { label: 'Roasted Pork Belly', value: 'Roasted Pork Belly' },
+]
+
+function normalizeCategoryValue(category = '') {
+  const normalized = String(category).toLowerCase().trim()
+  const categoryMap = {
+    soups: 'soup',
+    deep_fried: 'deep fried',
+    vat_dal: 'vat & dal',
+    curry_vuna: 'curry vuna',
+    vat_package: 'vat package',
+  }
+
+  return categoryMap[normalized] || normalized
+}
 
 const Inventory = () => {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [showRequirementForm, setShowRequirementForm] = useState(false)
   const [newRequirement, setNewRequirement] = useState({
+    menuId: '',
     menuName: '',
     category: '',
     ingredients: [{ ...emptyIngredientRow }],
@@ -36,6 +88,21 @@ const Inventory = () => {
     error: recipesError,
     addMenuRequirement,
   } = useMenuIngredients()
+  const [menu] = useMenu()
+
+  const menuOptions = useMemo(() => {
+    const options = (Array.isArray(menu) ? menu : [])
+      .filter((item) => item?.name)
+      .map((item) => ({
+        id: item.id || item._id,
+        label: item.name,
+        value: item.id || item._id || item.name,
+        menuName: item.name,
+        category: normalizeCategoryValue(item.category),
+      }))
+
+    return options.length > 0 ? options : menuNameOptions
+  }, [menu])
 
   const menuRecipes = useMemo(() => {
     const recipesByMenu = recipes.reduce((groups, recipe) => {
@@ -79,6 +146,18 @@ const Inventory = () => {
 
   const updateRequirementField = (field) => (event) => {
     setNewRequirement((current) => ({ ...current, [field]: event.target.value }))
+  }
+
+  const handleMenuNameChange = (event) => {
+    const selectedValue = event.target.value
+    const selectedMenu = menuOptions.find((menuItem) => String(menuItem.value) === String(selectedValue))
+
+    setNewRequirement((current) => ({
+      ...current,
+      menuId: selectedMenu?.id || '',
+      menuName: selectedMenu?.menuName || selectedMenu?.label || selectedValue,
+      category: selectedMenu?.category || current.category,
+    }))
   }
 
   const updateIngredientRow = (index, field) => (event) => {
@@ -130,6 +209,7 @@ const Inventory = () => {
     try {
       setSavingRequirement(true)
       await addMenuRequirement({
+        menuId: newRequirement.menuId,
         menuName,
         category,
         ingredients: selectedIngredients.map(({ stockItem, quantityRequired }) => ({
@@ -139,6 +219,7 @@ const Inventory = () => {
       })
       setSelectedCategory(category)
       setNewRequirement({
+        menuId: '',
         menuName: '',
         category: '',
         ingredients: [{ ...emptyIngredientRow }],
@@ -154,7 +235,7 @@ const Inventory = () => {
   return (
     <div className="p-6">
       <header className="mb-6">
-        <h2 className="text-2xl font-bold">Ingredient Inventory</h2>
+        <h2 className="text-4xl font-bold text-black">Ingredient Inventory</h2>
         <p className="text-sm text-gray-400">Track raw items and the ingredients required by each menu item</p>
       </header>
 
@@ -180,7 +261,7 @@ const Inventory = () => {
 </div>
 
 {showRequirementForm && (
-  <form className="mt-5 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+  <form className="mt-5 rounded-xl border border-gray-200 bg-white p-5 shadow-sm" onSubmit={handleRequirementSubmit}>
     
     {/* TOP FIELDS */}
     <div className="grid gap-4 md:grid-cols-2">
@@ -189,13 +270,19 @@ const Inventory = () => {
         <label className="text-sm font-medium text-gray-700">
           Menu Name
         </label>
-        <input
+        <select
           className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-          value={newRequirement.menuName}
-          onChange={updateRequirementField('menuName')}
-          placeholder="e.g. Chicken Burger"
+          value={newRequirement.menuId || newRequirement.menuName}
+          onChange={handleMenuNameChange}
           required
-        />
+        >
+          <option value="">Select menu name</option>
+          {menuOptions.map((menuItem) => (
+            <option key={menuItem.id || menuItem.value} value={menuItem.value}>
+              {menuItem.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div>
