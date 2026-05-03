@@ -1,4 +1,4 @@
-import { FaHome, FaCalendar, FaShoppingCart, FaAd, FaList } from "react-icons/fa";
+import { FaHome, FaCalendar, FaShoppingCart, FaAd, FaList, FaClipboardCheck, FaTruck, FaWarehouse, FaUserTie } from "react-icons/fa";
 import { NavLink, Outlet } from "react-router-dom";
 import useCart from "../hooks/useCart";
 import useAdmin from "../hooks/useAdmin";
@@ -36,6 +36,41 @@ const Dashboard = () => {
                                 <NavLink to="/dashboard/users" className="flex items-center gap-2">
                                     <FaList />
                                     All Users
+                                </NavLink>
+                            </li>
+
+                            <li>
+                                <NavLink to="/dashboard/kitchen" className="flex items-center gap-2">
+                                    <FaClipboardCheck />
+                                    Kitchen Orders
+                                </NavLink>
+                            </li>
+
+                            <li>
+                                <NavLink to="/dashboard/inventory" className="flex items-center gap-2">
+                                    <FaWarehouse />
+                                    Inventory
+                                </NavLink>
+                            </li>
+
+                            <li>
+                                <NavLink to="/dashboard/suppliers" className="flex items-center gap-2">
+                                    <FaTruck />
+                                    Suppliers
+                                </NavLink>
+                            </li>
+
+                            <li>
+                                <NavLink to="/dashboard/purchase-orders" className="flex items-center gap-2">
+                                    <FaList />
+                                    Purchase Orders
+                                </NavLink>
+                            </li>
+
+                            <li>
+                                <NavLink to="/dashboard/staff" className="flex items-center gap-2">
+                                    <FaUserTie />
+                                    Staff Management
                                 </NavLink>
                             </li>
                         </>

@@ -52,7 +52,7 @@ const Cart = () => {
                 </h2>
                 <h2 className="text-2xl font-semibold">Total: ${totalPrice.toFixed(2)}</h2>
                 {cart.length ? (
-                    <Link to="/dashboard/payment">
+                    <Link to="/dashboard/checkout">
                         <button className="btn bg-green-500 text-white px-5 py-2 rounded-lg hover:bg-green-600 transition-all duration-300">
                             Proceed to Pay
                         </button>

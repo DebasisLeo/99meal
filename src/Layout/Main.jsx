@@ -9,7 +9,9 @@ const Main = () => {
     return (
         <div>
             {isLogin || <Navbar></Navbar>}
-            <Outlet></Outlet>
+            <main className={isLogin ? '' : 'pt-20'}>
+                <Outlet></Outlet>
+            </main>
             {isLogin || <Footer></Footer>}
         </div>
     );

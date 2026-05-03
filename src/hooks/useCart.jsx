@@ -15,7 +15,19 @@ const useCart = () => {
     enabled: !!user?.email // only fetch if user is logged in
   });
 
-  return [cart, refetch];
+  const clearCart = async () => {
+    if (!user?.email) return;
+    try {
+      await fetch(`http://localhost:8000/carts/clear?email=${user.email}`, {
+        method: 'DELETE'
+      });
+      refetch();
+    } catch (err) {
+      console.log('Error clearing cart:', err);
+    }
+  };
+
+  return [cart, refetch, clearCart];
 };
 
 export default useCart;
