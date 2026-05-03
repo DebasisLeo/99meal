@@ -1,11 +1,17 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import Swal from 'sweetalert2'
 import { FaCheck, FaSyncAlt, FaUsers } from 'react-icons/fa'
 import useStaffManagement from '../../hooks/useStaffManagement'
 
 const StaffManagement = () => {
-  const { staff, pendingAttendance, loading, error, refetch, approveAttendance } = useStaffManagement()
-  const [approvingId, setApprovingId] = useState(null)
+  const {
+    staff,
+    pendingAttendance,
+    loading,
+    error,
+    refetch,
+    approveAttendance,
+  } = useStaffManagement()
 
   useEffect(() => {
     document.title = 'Rassporium | Staff Management'
@@ -14,7 +20,7 @@ const StaffManagement = () => {
   const handleApprove = async (attendance) => {
     const result = await Swal.fire({
       title: 'Approve attendance?',
-      text: `${attendance.staffName} on ${attendance.date}`,
+      text: `${attendance.staffName} • ${attendance.date}`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonText: 'Approve',
@@ -22,169 +28,256 @@ const StaffManagement = () => {
 
     if (!result.isConfirmed) return
 
-    try {
-      setApprovingId(attendance.id)
-      await approveAttendance(attendance.id)
-      Swal.fire({
-        title: 'Approved',
-        text: 'Attendance has been approved.',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false,
-      })
-    } catch (err) {
-      Swal.fire({
-        title: 'Approval failed',
-        text: err.message || 'Could not approve attendance.',
-        icon: 'error',
-      })
-    } finally {
-      setApprovingId(null)
+    await approveAttendance(attendance.id)
+
+    Swal.fire({
+      title: 'Approved',
+      icon: 'success',
+      timer: 1200,
+      showConfirmButton: false,
+    })
+  }
+
+  const StatCard = ({ title, value, hint, color }) => (
+    <div className="bg-white border rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+      <p className="text-sm text-gray-500 font-medium">{title}</p>
+      <p className={`text-3xl font-bold mt-2 ${color}`}>{value}</p>
+      {hint && <p className="text-xs text-gray-400 mt-1">{hint}</p>}
+    </div>
+  )
+
+  const Badge = ({ children, type }) => {
+    const map = {
+      active: 'bg-green-100 text-green-700',
+      inactive: 'bg-gray-100 text-gray-600',
+      pending: 'bg-yellow-100 text-yellow-700',
     }
+
+    return (
+      <span
+        className={`px-3 py-1 rounded-full text-xs font-semibold ${map[type] || map.inactive}`}
+      >
+        {children}
+      </span>
+    )
   }
 
   return (
-    <div className="p-6">
-      <header className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div className="min-h-screen bg-gray-50 p-6">
+
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+
         <div>
-          <h2 className="text-2xl font-bold">Staff Management</h2>
-          <p className="text-sm text-gray-400">View staff records and approve pending attendance</p>
-        </div>
-        <button
-          type="button"
-          className="btn btn-primary btn-sm"
-          onClick={refetch}
-        >
-          <FaSyncAlt />
-          Refresh
-        </button>
-      </header>
-
-      {loading && (
-        <div className="alert alert-info mb-4">
-          <span>Loading staff records...</span>
-        </div>
-      )}
-
-      {!loading && error && (
-        <div className="alert alert-error mb-4">
-          <span>{error}</span>
-        </div>
-      )}
-
-      <div className="mb-6 grid gap-4 md:grid-cols-3">
-        <div className="rounded border bg-slate-900 p-4 text-slate-100">
-          <p className="text-sm text-slate-400">Total Staff</p>
-          <p className="mt-2 text-3xl font-bold">{staff.length}</p>
-        </div>
-        <div className="rounded border bg-slate-900 p-4 text-slate-100">
-          <p className="text-sm text-slate-400">Active Staff</p>
-          <p className="mt-2 text-3xl font-bold text-cyan-300">
-            {staff.filter((person) => person.status === 'active').length}
+          <h1 className="text-3xl font-bold text-gray-800">
+            Staff Management
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Manage employees, track attendance, and approve work logs
           </p>
         </div>
-        <div className="rounded border bg-slate-900 p-4 text-slate-100">
-          <p className="text-sm text-slate-400">Pending Attendance</p>
-          <p className="mt-2 text-3xl font-bold text-yellow-300">{pendingAttendance.length}</p>
+
+        <button
+          onClick={refetch}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition"
+        >
+          <FaSyncAlt />
+          Refresh Data
+        </button>
+
+      </div>
+
+      {/* LOADING / ERROR */}
+      {loading && (
+        <div className="bg-blue-50 border text-blue-700 p-3 rounded-lg mb-4 text-sm">
+          Loading staff and attendance records...
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-50 border text-red-600 p-3 rounded-lg mb-4 text-sm">
+          {error}
+        </div>
+      )}
+
+      {/* STATS */}
+      <div className="grid md:grid-cols-3 gap-5 mb-8">
+
+        <StatCard
+          title="Total Employees"
+          value={staff.length}
+          hint="All registered staff"
+          color="text-gray-800"
+        />
+
+        <StatCard
+          title="Active Employees"
+          value={staff.filter((s) => s.status === 'active').length}
+          hint="Currently working"
+          color="text-green-600"
+        />
+
+        <StatCard
+          title="Pending Attendance"
+          value={pendingAttendance.length}
+          hint="Needs approval"
+          color="text-amber-600"
+        />
+
+      </div>
+
+      {/* STAFF TABLE */}
+      <div className="bg-white border rounded-2xl shadow-sm overflow-hidden mb-10">
+
+        <div className="px-5 py-4 border-b">
+          <div className="flex items-center gap-2">
+            <FaUsers className="text-gray-600" />
+            <h2 className="font-semibold text-gray-700">
+              Employee Directory
+            </h2>
+          </div>
+        </div>
+
+        <div className="overflow-auto">
+
+          <table className="min-w-full text-sm">
+
+            <thead className="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider">
+              <tr>
+                <th className="p-3 text-left">Name</th>
+                <th className="p-3 text-left">Contact</th>
+                <th className="p-3 text-left">Role</th>
+                <th className="p-3 text-left">Salary</th>
+                <th className="p-3 text-left">Work Days</th>
+                <th className="p-3 text-left">Last Active</th>
+                <th className="p-3 text-left">Status</th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y">
+
+              {staff.length === 0 && (
+                <tr>
+                  <td colSpan="7" className="p-6 text-center text-gray-500">
+                    No staff records found
+                  </td>
+                </tr>
+              )}
+
+              {staff.map((person) => (
+                <tr key={person.id} className="hover:bg-gray-50">
+
+                  <td className="p-3">
+                    <p className="font-semibold text-gray-800">{person.name}</p>
+                    <p className="text-xs text-gray-400">ID: {person.id}</p>
+                  </td>
+
+                  <td className="p-3 text-gray-600">
+                    <p>{person.email}</p>
+                    <p className="text-xs">{person.phone || 'Not provided'}</p>
+                  </td>
+
+                  <td className="p-3 text-gray-700">
+                    {person.position || 'Staff'}
+                  </td>
+
+                  <td className="p-3 font-medium text-gray-800">
+                    ৳ {person.salary}
+                  </td>
+
+                  <td className="p-3 font-semibold text-gray-700">
+                    {person.workingDays} days
+                  </td>
+
+                  <td className="p-3 text-gray-500 text-sm">
+                    {person.lastWorkedDate || 'N/A'}
+                  </td>
+
+                  <td className="p-3">
+                    <Badge type={person.status}>
+                      {person.status}
+                    </Badge>
+                  </td>
+
+                </tr>
+              ))}
+
+            </tbody>
+
+          </table>
+
         </div>
       </div>
 
-      <section className="mb-8">
-        <div className="mb-3 flex items-center gap-2">
-          <FaUsers />
-          <h3 className="text-lg font-semibold">Staff Records</h3>
-        </div>
-        <div className="overflow-auto rounded border">
-          <table className="min-w-full text-left">
-            <thead className="bg-slate-800 text-slate-200">
-              <tr>
-                <th className="px-4 py-2">Name</th>
-                <th className="px-4 py-2">Email</th>
-                <th className="px-4 py-2">Phone</th>
-                <th className="px-4 py-2">Position</th>
-                <th className="px-4 py-2">Salary</th>
-                <th className="px-4 py-2">Working Days</th>
-                <th className="px-4 py-2">Last Worked</th>
-                <th className="px-4 py-2">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {!loading && staff.length === 0 && (
-                <tr>
-                  <td className="px-4 py-6 text-center text-gray-500" colSpan="8">
-                    No staff records found.
-                  </td>
-                </tr>
-              )}
-              {staff.map((person) => (
-                <tr key={person.id} className="odd:bg-slate-900 even:bg-slate-800/40 text-slate-100">
-                  <td className="px-4 py-3 font-semibold">{person.name}</td>
-                  <td className="px-4 py-3 text-sm">{person.email}</td>
-                  <td className="px-4 py-3 text-sm">{person.phone || 'N/A'}</td>
-                  <td className="px-4 py-3 text-sm">{person.position || 'Staff'}</td>
-                  <td className="px-4 py-3 text-sm">{person.salary}</td>
-                  <td className="px-4 py-3 text-sm font-semibold">{person.workingDays}</td>
-                  <td className="px-4 py-3 text-sm">{person.lastWorkedDate || 'N/A'}</td>
-                  <td className="px-4 py-3">
-                    <span className={`badge border-0 ${person.status === 'active' ? 'bg-cyan-900 text-cyan-100' : 'bg-slate-700 text-slate-200'}`}>
-                      {person.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      {/* ATTENDANCE TABLE */}
+      <div className="bg-white border rounded-2xl shadow-sm overflow-hidden">
 
-      <section>
-        <h3 className="mb-3 text-lg font-semibold">Pending Attendance Approval</h3>
-        <div className="overflow-auto rounded border">
-          <table className="min-w-full text-left">
-            <thead className="bg-slate-800 text-slate-200">
+        <div className="px-5 py-4 border-b">
+          <h2 className="font-semibold text-gray-700">
+            Pending Attendance Approvals
+          </h2>
+        </div>
+
+        <div className="overflow-auto">
+
+          <table className="min-w-full text-sm">
+
+            <thead className="bg-gray-100 text-gray-600 text-xs uppercase">
               <tr>
-                <th className="px-4 py-2">Staff</th>
-                <th className="px-4 py-2">Date</th>
-                <th className="px-4 py-2">Check In</th>
-                <th className="px-4 py-2">Check Out</th>
-                <th className="px-4 py-2">Status</th>
-                <th className="px-4 py-2">Action</th>
+                <th className="p-3 text-left">Employee</th>
+                <th className="p-3 text-left">Date</th>
+                <th className="p-3 text-left">Check-in</th>
+                <th className="p-3 text-left">Check-out</th>
+                <th className="p-3 text-left">Status</th>
+                <th className="p-3 text-center">Action</th>
               </tr>
             </thead>
-            <tbody>
-              {!loading && pendingAttendance.length === 0 && (
+
+            <tbody className="divide-y">
+
+              {pendingAttendance.length === 0 && (
                 <tr>
-                  <td className="px-4 py-6 text-center text-gray-500" colSpan="6">
-                    No pending attendance.
+                  <td colSpan="6" className="p-6 text-center text-gray-500">
+                    No pending approvals
                   </td>
                 </tr>
               )}
-              {pendingAttendance.map((attendance) => (
-                <tr key={attendance.id} className="odd:bg-slate-900 even:bg-slate-800/40 text-slate-100">
-                  <td className="px-4 py-3 font-semibold">{attendance.staffName}</td>
-                  <td className="px-4 py-3 text-sm">{attendance.date}</td>
-                  <td className="px-4 py-3 text-sm">{attendance.checkIn || 'N/A'}</td>
-                  <td className="px-4 py-3 text-sm">{attendance.checkOut || 'N/A'}</td>
-                  <td className="px-4 py-3">
-                    <span className="badge border-0 bg-yellow-900 text-yellow-100">{attendance.status}</span>
+
+              {pendingAttendance.map((a) => (
+                <tr key={a.id} className="hover:bg-gray-50">
+
+                  <td className="p-3 font-semibold text-gray-800">
+                    {a.staffName}
                   </td>
-                  <td className="px-4 py-3">
+
+                  <td className="p-3 text-gray-600">{a.date}</td>
+                  <td className="p-3 text-gray-600">{a.checkIn || '-'}</td>
+                  <td className="p-3 text-gray-600">{a.checkOut || '-'}</td>
+
+                  <td className="p-3">
+                    <Badge type="pending">{a.status}</Badge>
+                  </td>
+
+                  <td className="p-3 text-center">
                     <button
-                      type="button"
-                      className="btn btn-success btn-sm"
-                      disabled={approvingId === attendance.id}
-                      onClick={() => handleApprove(attendance)}
+                      onClick={() => handleApprove(a)}
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition"
                     >
                       <FaCheck />
                       Approve
                     </button>
                   </td>
+
                 </tr>
               ))}
+
             </tbody>
+
           </table>
+
         </div>
-      </section>
+      </div>
+
     </div>
   )
 }

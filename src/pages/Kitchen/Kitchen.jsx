@@ -7,7 +7,9 @@ import useMenuIngredients from '../../hooks/useMenuIngredients'
 
 function groupRecipesByMenu(recipes = []) {
   return recipes.reduce((groups, recipe) => {
-    const keys = [recipe.menuId, recipe.menuName].filter(Boolean).map((key) => String(key).toLowerCase())
+    const keys = [recipe.menuId, recipe.menuName]
+      .filter(Boolean)
+      .map((key) => String(key).toLowerCase())
 
     keys.forEach((key) => {
       groups[key] = [
@@ -78,7 +80,9 @@ const Kitchen = () => {
     () =>
       payments
         .filter((payment) => payment.status === 'success')
-        .map((payment) => paymentToKitchenOrder(payment, recipeGroups, orderStatuses[payment.id])),
+        .map((payment) =>
+          paymentToKitchenOrder(payment, recipeGroups, orderStatuses[payment.id])
+        ),
     [payments, recipeGroups, orderStatuses]
   )
 
@@ -93,14 +97,14 @@ const Kitchen = () => {
   const statsSummary = useMemo(
     () => ({
       categories: orderStats.length,
-      quantity: orderStats.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
-      revenue: orderStats.reduce((sum, item) => sum + Number(item.revenue || 0), 0),
+      quantity: orderStats.reduce((s, i) => s + Number(i.quantity || 0), 0),
+      revenue: orderStats.reduce((s, i) => s + Number(i.revenue || 0), 0),
     }),
     [orderStats]
   )
 
-  const handleAccept = (order) => {
-    const result = deductForOrder(order.items)
+  const handleAccept = async (order) => {
+    const result = await deductForOrder(order.items)
 
     if (!result.success) {
       Swal.fire({
@@ -124,14 +128,7 @@ const Kitchen = () => {
     Swal.fire({
       title: 'Order accepted',
       html: `<div class="text-left">
-        <p>Kitchen inventory has been reduced for ${order.orderId}.</p>
-        ${
-          result.triggeredPOs?.length
-            ? `<p class="mt-2 text-sm"><strong>Reorder created:</strong> ${result.triggeredPOs
-                .map((po) => po.itemName)
-                .join(', ')}</p>`
-            : ''
-        }
+        <p>Inventory updated for ${order.orderId}</p>
       </div>`,
       icon: 'success',
     })
@@ -149,64 +146,109 @@ const Kitchen = () => {
     }))
   }
 
-  const pendingOrders = orders.filter((order) => order.kitchenStatus === 'pending')
-  const completedOrders = orders.filter((order) => order.kitchenStatus !== 'pending')
+  const pendingOrders = orders.filter((o) => o.kitchenStatus === 'pending')
+  const completedOrders = orders.filter((o) => o.kitchenStatus !== 'pending')
 
   const renderOrder = (order) => {
     const requiredItems = previewForOrder(order.items)
 
     return (
-      <div key={order.orderId} className="card bg-base-200">
-        <div className="card-body">
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+      <div
+        key={order.orderId}
+        className="bg-white border border-gray-100 shadow-sm hover:shadow-lg transition rounded-2xl"
+      >
+        <div className="p-5">
+
+          <div className="flex justify-between items-start">
             <div>
-              <h3 className="card-title text-lg">{order.orderId}</h3>
-              <p className="text-sm text-gray-400">{order.customerEmail}</p>
-              <p className="text-sm text-gray-400">{new Date(order.createdAt).toLocaleString()}</p>
+              <h3 className="text-lg font-bold text-gray-800">
+                {order.orderId}
+              </h3>
+              <p className="text-sm text-gray-500">{order.customerEmail}</p>
+              <p className="text-xs text-gray-400">
+                {new Date(order.createdAt).toLocaleString()}
+              </p>
             </div>
-            <div className="text-left md:text-right">
-              <div className={`badge ${order.kitchenStatus === 'accepted' ? 'badge-success' : 'badge-warning'}`}>
+
+            <div className="text-right">
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  order.kitchenStatus === 'accepted'
+                    ? 'bg-green-100 text-green-700'
+                    : order.kitchenStatus === 'rejected'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-yellow-100 text-yellow-700'
+                }`}
+              >
                 {order.kitchenStatus.toUpperCase()}
-              </div>
-              <p className="mt-2 text-xl font-bold">${order.totalPrice.toFixed(2)}</p>
+              </span>
+
+              <p className="text-xl font-bold text-indigo-600 mt-2">
+                ${order.totalPrice.toFixed(2)}
+              </p>
             </div>
           </div>
 
-          <div className="divider"></div>
+          <div className="grid md:grid-cols-2 gap-4 mt-5">
 
-          <div className="grid gap-4 lg:grid-cols-2">
             <div>
-              <h4 className="mb-2 font-semibold">Ordered items</h4>
-              <div className="space-y-2 text-sm">
-                {order.items.map((item, index) => (
-                  <div key={`${item.name}-${index}`} className="flex justify-between gap-3 rounded bg-base-100 px-3 py-2">
-                    <span>{item.name}</span>
-                    <span>${Number(item.price || 0).toFixed(2)}</span>
+              <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                Items
+              </h4>
+
+              <div className="space-y-2">
+                {order.items.map((item, i) => (
+                  <div
+                    key={i}
+                    className="flex justify-between bg-gray-50 px-3 py-2 rounded-lg text-sm"
+                  >
+                    <span className="text-gray-700">{item.name}</span>
+                    <span className="text-indigo-600 font-semibold">
+                      ${item.price}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
 
             <div>
-              <h4 className="mb-2 font-semibold">Ingredient inventory</h4>
+              <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                Ingredients
+              </h4>
+
               {requiredItems.length === 0 ? (
-                <p className="text-sm text-warning">No recipe ingredients mapped for this order.</p>
+                <p className="text-xs text-orange-500">
+                  No mapping found
+                </p>
               ) : (
-                <div className="overflow-x-auto rounded border border-base-300">
-                  <table className="table table-sm">
-                    <thead>
+                <div className="overflow-x-auto border rounded-lg">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-100 text-gray-600">
                       <tr>
-                        <th>Ingredient</th>
-                        <th>Need</th>
-                        <th>Stock</th>
+                        <th className="p-2 text-left">Ingredient</th>
+                        <th className="p-2">Need</th>
+                        <th className="p-2">Stock</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {requiredItems.map((item) => (
-                        <tr key={item.sku} className={item.available < item.requiredQty ? 'text-error' : ''}>
-                          <td>{item.name}</td>
-                          <td>{item.requiredQty}</td>
-                          <td>{item.available}</td>
+                      {requiredItems.map((item, i) => (
+                        <tr
+                          key={i}
+                          className="border-t text-gray-700"
+                        >
+                          <td className="p-2">{item.name}</td>
+                          <td className="p-2 text-center">
+                            {item.requiredQty}
+                          </td>
+                          <td
+                            className={`p-2 text-center font-semibold ${
+                              item.available < item.requiredQty
+                                ? 'text-red-500'
+                                : 'text-green-600'
+                            }`}
+                          >
+                            {item.available}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -214,100 +256,75 @@ const Kitchen = () => {
                 </div>
               )}
             </div>
+
           </div>
 
           {order.kitchenStatus === 'pending' && (
-            <div className="card-actions justify-end mt-4">
-              <button className="btn btn-ghost btn-sm" onClick={() => handleReject(order)}>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => handleReject(order)}
+                className="px-4 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100"
+              >
                 Reject
               </button>
-              <button className="btn btn-success btn-sm" onClick={() => handleAccept(order)}>
-                Accept Order
+              <button
+                onClick={() => handleAccept(order)}
+                className="px-4 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700"
+              >
+                Accept
               </button>
             </div>
           )}
+
         </div>
       </div>
     )
   }
 
   return (
-    <div className="p-6">
-      <header className="mb-6">
-        <h2 className="text-2xl font-bold">Kitchen Orders</h2>
-        <p className="text-sm text-gray-400">Accept paid orders, deduct mapped ingredient inventory, and review paid-item stats</p>
-      </header>
+    <div className="p-6 bg-gray-50 min-h-screen">
 
-      <section className="mb-6 grid gap-4 lg:grid-cols-3">
-        <div className="card bg-base-200">
-          <div className="card-body">
-            <span className="text-sm text-gray-400">Paid categories</span>
-            <span className="text-2xl font-bold">{isStatsLoading ? '...' : statsSummary.categories}</span>
-          </div>
-        </div>
-        <div className="card bg-base-200">
-          <div className="card-body">
-            <span className="text-sm text-gray-400">Paid item count</span>
-            <span className="text-2xl font-bold">{isStatsLoading ? '...' : statsSummary.quantity}</span>
-          </div>
-        </div>
-        <div className="card bg-base-200">
-          <div className="card-body">
-            <span className="text-sm text-gray-400">Estimated revenue</span>
-            <span className="text-2xl font-bold">{isStatsLoading ? '...' : `$${statsSummary.revenue.toFixed(2)}`}</span>
-          </div>
-        </div>
-      </section>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">
+          Kitchen Dashboard
+        </h2>
+        <p className="text-gray-500 text-sm">
+          Manage paid orders & inventory
+        </p>
+      </div>
 
-      <section className="mb-8 card bg-base-200">
-        <div className="card-body">
-          <h3 className="card-title">Paid Orders by Category</h3>
-          {orderStats.length === 0 ? (
-            <p className="text-sm text-gray-400">No paid order stats available yet.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="table table-sm">
-                <thead>
-                  <tr>
-                    <th>Category</th>
-                    <th>Quantity</th>
-                    <th>Revenue</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orderStats.map((item) => (
-                    <tr key={item.category}>
-                      <td>{item.category}</td>
-                      <td>{Number(item.quantity || 0)}</td>
-                      <td>${Number(item.revenue || 0).toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+      <div className="grid md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-xl shadow">
+          <p className="text-gray-500 text-sm">Categories</p>
+          <p className="text-2xl font-bold text-indigo-600">
+            {statsSummary.categories}
+          </p>
         </div>
-      </section>
+
+        <div className="bg-white p-4 rounded-xl shadow">
+          <p className="text-gray-500 text-sm">Items</p>
+          <p className="text-2xl font-bold text-green-600">
+            {statsSummary.quantity}
+          </p>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl shadow">
+          <p className="text-gray-500 text-sm">Revenue</p>
+          <p className="text-2xl font-bold text-pink-600">
+            ${statsSummary.revenue.toFixed(2)}
+          </p>
+        </div>
+      </div>
 
       {isPaymentsLoading ? (
-        <div className="alert alert-info">
-          <span>Loading paid orders...</span>
-        </div>
-      ) : orders.length === 0 ? (
-        <div className="alert alert-info">
-          <span>No paid orders waiting for the kitchen yet.</span>
-        </div>
+        <p className="text-gray-500">Loading...</p>
       ) : (
-        <div className="grid gap-6">
-          {pendingOrders.length > 0 && <section className="grid gap-4">{pendingOrders.map(renderOrder)}</section>}
-          {completedOrders.length > 0 && (
-            <section className="grid gap-4">
-              <h3 className="text-lg font-semibold">Processed orders</h3>
-              {completedOrders.map(renderOrder)}
-            </section>
-          )}
+        <div className="space-y-4">
+          {pendingOrders.map(renderOrder)}
+          {completedOrders.map(renderOrder)}
         </div>
       )}
+
     </div>
   )
 }

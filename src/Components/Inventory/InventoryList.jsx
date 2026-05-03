@@ -15,7 +15,8 @@ const InventoryList = ({
   const [showForm, setShowForm] = useState(false)
   const [draft, setDraft] = useState(initialDraft)
 
-  const setField = (field) => (e) => setDraft((prev) => ({ ...prev, [field]: e.target.value }))
+  const setField = (field) => (e) =>
+    setDraft((prev) => ({ ...prev, [field]: e.target.value }))
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -30,75 +31,74 @@ const InventoryList = ({
   }
 
   return (
-    <div className="inventory-list">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h3 className="text-lg font-semibold">Raw ingredients</h3>
-        <button className="btn btn-success btn-sm" onClick={() => setShowForm((v) => !v)}>
-          {showForm ? 'Close' : 'Add ingredient'}
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+
+      {/* HEADER */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-xl font-semibold text-gray-800">
+            Raw Ingredients
+          </h3>
+          <p className="text-sm text-gray-500">
+            Manage stock levels and inventory status
+          </p>
+        </div>
+
+        <button
+          className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition shadow-sm"
+          onClick={() => setShowForm((v) => !v)}
+        >
+          {showForm ? 'Close' : '+ Add Ingredient'}
         </button>
       </div>
 
+      {/* FORM */}
       {showForm && (
-        <div className="card bg-base-200 mb-4">
-          <form onSubmit={handleSubmit} className="card-body gap-3">
-            <div className="grid md:grid-cols-4 gap-3">
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Ingredient</span>
-                </label>
-                <input
-                  className="input input-bordered input-sm"
-                  value={draft.name}
-                  onChange={setField('name')}
-                  placeholder="e.g. Fish"
-                />
-              </div>
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 mb-6">
+          <form onSubmit={handleSubmit}>
+            <div className="grid md:grid-cols-4 gap-4">
 
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Unit</span>
-                </label>
-                <input
-                  className="input input-bordered input-sm"
-                  value={draft.unit}
-                  onChange={setField('unit')}
-                  placeholder="kg, gm, pcs"
-                />
-              </div>
+              <input
+                className="border border-gray-300 rounded-lg p-2 text-gray-700 focus:ring-2 focus:ring-indigo-400 outline-none"
+                value={draft.name}
+                onChange={setField('name')}
+                placeholder="Ingredient name"
+              />
 
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Stock</span>
-                </label>
-                <input
-                  className="input input-bordered input-sm"
-                  type="number"
-                  min="0"
-                  value={draft.stock}
-                  onChange={setField('stock')}
-                />
-              </div>
+              <input
+                className="border border-gray-300 rounded-lg p-2 text-gray-700 focus:ring-2 focus:ring-indigo-400 outline-none"
+                value={draft.unit}
+                onChange={setField('unit')}
+                placeholder="Unit (kg, gm, pcs)"
+              />
 
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Min</span>
-                </label>
-                <input
-                  className="input input-bordered input-sm"
-                  type="number"
-                  min="0"
-                  value={draft.min}
-                  onChange={setField('min')}
-                />
-              </div>
+              <input
+                type="number"
+                className="border border-gray-300 rounded-lg p-2 text-gray-700 focus:ring-2 focus:ring-indigo-400 outline-none"
+                value={draft.stock}
+                onChange={setField('stock')}
+                placeholder="Stock"
+              />
 
+              <input
+                type="number"
+                className="border border-gray-300 rounded-lg p-2 text-gray-700 focus:ring-2 focus:ring-indigo-400 outline-none"
+                value={draft.min}
+                onChange={setField('min')}
+                placeholder="Min stock"
+              />
             </div>
 
-            <div className="flex gap-2">
-              <button type="submit" className="btn btn-primary btn-sm">
+            <div className="flex gap-3 mt-4">
+              <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
                 Save
               </button>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setDraft(initialDraft)}>
+
+              <button
+                type="button"
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                onClick={() => setDraft(initialDraft)}
+              >
                 Reset
               </button>
             </div>
@@ -106,80 +106,98 @@ const InventoryList = ({
         </div>
       )}
 
-      <div className="overflow-auto rounded border">
-        <table className="min-w-full text-left">
-          <thead className="bg-slate-800 text-slate-200">
-            <tr>
-              <th className="px-4 py-2">Name</th>
-              <th className="px-4 py-2">Unit</th>
-              <th className="px-4 py-2">Stock</th>
-              <th className="px-4 py-2">Min</th>
-              <th className="px-4 py-2">Status</th>
-              <th className="px-4 py-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (
-              <tr>
-                <td className="px-4 py-6 text-center text-slate-500" colSpan="6">
-                  Loading inventory...
-                </td>
-              </tr>
-            )}
+      {/* STATES */}
+      {loading && (
+        <p className="text-gray-500 text-sm">Loading inventory...</p>
+      )}
 
-            {!loading && error && (
-              <tr>
-                <td className="px-4 py-6 text-center text-red-500" colSpan="6">
-                  {error}
-                </td>
-              </tr>
-            )}
+      {error && (
+        <p className="text-red-500 text-sm">{error}</p>
+      )}
 
-            {!loading && !error && items.length === 0 && (
-              <tr>
-                <td className="px-4 py-6 text-center text-slate-500" colSpan="6">
-                  No raw ingredients found.
-                </td>
-              </tr>
-            )}
+      {/* TABLE */}
+      <div className="overflow-hidden rounded-xl border border-gray-200">
 
-            {items.map((it) => (
-              <tr key={it.id} className="odd:bg-slate-900 even:bg-slate-800/40 text-slate-100">
-                <td className="px-4 py-3">{it.name}</td>
-                <td className="px-4 py-3">{it.unit}</td>
-                <td className="px-4 py-3">{it.stock}</td>
-                <td className="px-4 py-3">{it.min}</td>
-                <td className="px-4 py-3">{it.status}</td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <button className="px-2 py-1 bg-blue-600 text-white rounded" onClick={() => onAdjust(it.id, -1)}>
-                      -
-                    </button>
-                    <button className="px-2 py-1 bg-blue-600 text-white rounded" onClick={() => onAdjust(it.id, 1)}>
-                      +
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-ghost btn-sm btn-square text-error"
-                      onClick={() => onDelete(it.id)}
-                      aria-label={`Delete ${it.name}`}
-                      title="Delete"
-                    >
-                    <FaTrashAlt className="text-xl" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {/* HEADER */}
+        <div className="grid grid-cols-6 bg-gray-100 text-gray-600 text-sm font-semibold p-3">
+          <div>Name</div>
+          <div>Unit</div>
+          <div>Stock</div>
+          <div>Min</div>
+          <div>Status</div>
+          <div>Actions</div>
+        </div>
+
+        {/* ROWS */}
+        <div className="divide-y">
+
+          {items.map((it) => {
+
+            const status =
+              it.stock <= 0
+                ? { label: 'Out', color: 'bg-red-100 text-red-700' }
+                : it.stock < it.min
+                ? { label: 'Low', color: 'bg-yellow-100 text-yellow-700' }
+                : { label: 'OK', color: 'bg-green-100 text-green-700' }
+
+            return (
+              <div
+                key={it.id}
+                className="grid grid-cols-6 items-center p-3 hover:bg-gray-50 transition text-sm text-gray-700"
+              >
+
+                <div className="font-medium text-gray-900">{it.name}</div>
+                <div>{it.unit}</div>
+                <div>{it.stock}</div>
+                <div>{it.min}</div>
+
+                {/* STATUS */}
+                <div>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${status.color}`}>
+                    {status.label}
+                  </span>
+                </div>
+
+                {/* ACTIONS */}
+                <div className="flex items-center gap-2">
+
+                  <button
+                    className="w-8 h-8 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition"
+                    onClick={() => onAdjust(it.id, -1)}
+                  >
+                    -
+                  </button>
+
+                  <button
+                    className="w-8 h-8 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition"
+                    onClick={() => onAdjust(it.id, 1)}
+                  >
+                    +
+                  </button>
+
+                  <button
+                    className="w-8 h-8 rounded-md bg-red-500 text-white hover:bg-red-600 flex items-center justify-center"
+                    onClick={() => onDelete(it.id)}
+                  >
+                    <FaTrashAlt className="text-sm" />
+                  </button>
+
+                </div>
+
+              </div>
+            )
+          })}
+
+        </div>
       </div>
 
+      {/* LOW STOCK */}
       {lowStock.length > 0 && (
-        <div className="mt-4 p-3 bg-yellow-900 rounded text-yellow-100">
-          <strong>Low stock:</strong> {lowStock.map((i) => i.name).join(', ')}
+        <div className="mt-5 p-4 rounded-xl border border-yellow-200 bg-yellow-50 text-yellow-800 text-sm">
+          ⚠ Low stock items: {lowStock.map((i) => i.name).join(', ')}
         </div>
       )}
+
     </div>
   )
 }

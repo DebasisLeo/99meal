@@ -39,5 +39,19 @@ export default function useMenuIngredients() {
     fetchRecipes()
   }, [fetchRecipes])
 
-  return { recipes, loading, error, refetch: fetchRecipes }
+  const addMenuRequirement = async (payload) => {
+    await apiRequest('/menu-ingredients', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+    fetchRecipes()
+  }
+
+  return {
+    recipes,
+    loading,
+    error,
+    refetch: fetchRecipes,
+    addMenuRequirement,
+  }
 }

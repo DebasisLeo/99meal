@@ -16,26 +16,25 @@ const CheckoutForm = () => {
     const [cart, refetch] = useCart();
     const navigate = useNavigate();
 
-    const [error, setError] = useState('');
-    const [clientSecret, setClientSecret] = useState('');
-    const [transactionId, setTransactionId] = useState('');
+    const [error, setError] = useState("");
+    const [clientSecret, setClientSecret] = useState("");
+    const [processing, setProcessing] = useState(false);
 
     const totalPrice = cart.reduce(
         (total, item) => total + parseFloat(item.price),
         0
     );
 
-    // items for DB
     const items = cart.map(item => ({
         id: item.id,
         name: item.name,
         price: item.price
     }));
 
-   
     useEffect(() => {
         if (totalPrice > 0) {
-            axiosPublic.post("/create-payment-intent", { price: totalPrice })
+            axiosPublic
+                .post("/create-payment-intent", { price: totalPrice })
                 .then(res => setClientSecret(res.data.clientSecret));
         }
     }, [totalPrice, axiosPublic]);
@@ -44,6 +43,8 @@ const CheckoutForm = () => {
         event.preventDefault();
 
         if (!stripe || !elements) return;
+
+        setProcessing(true);
 
         const card = elements.getElement(CardElement);
         if (!card) return;
@@ -55,9 +56,8 @@ const CheckoutForm = () => {
 
         if (methodError) {
             setError(methodError.message);
+            setProcessing(false);
             return;
-        } else {
-            setError("");
         }
 
         const { paymentIntent, error: confirmError } =
@@ -73,14 +73,11 @@ const CheckoutForm = () => {
 
         if (confirmError) {
             setError(confirmError.message);
+            setProcessing(false);
             return;
         }
 
-     
         if (paymentIntent.status === "succeeded") {
-
-            setTransactionId(paymentIntent.id);
-
             const payment = {
                 email: user.email,
                 price: totalPrice,
@@ -91,7 +88,6 @@ const CheckoutForm = () => {
 
             const res = await axiosPublic.post("/payments", payment);
 
-            
             if (res.data?.insertedId) {
 
                 await Promise.all(
@@ -105,6 +101,7 @@ const CheckoutForm = () => {
                 Swal.fire({
                     icon: "success",
                     title: "Payment Successful 🎉",
+                    text: "Your order has been placed successfully",
                     timer: 1500,
                     showConfirmButton: false
                 });
@@ -112,25 +109,53 @@ const CheckoutForm = () => {
                 navigate("/dashboard/paymentHistory");
             }
         }
+
+        setProcessing(false);
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <CardElement />
+        <form onSubmit={handleSubmit} className="space-y-4">
 
+            {/* CARD BOX */}
+            <div className="border rounded-lg p-4 shadow-sm bg-gray-50">
+                <CardElement
+                    options={{
+                        style: {
+                            base: {
+                                fontSize: "16px",
+                                color: "#374151",
+                                "::placeholder": {
+                                    color: "#9CA3AF"
+                                }
+                            }
+                        }
+                    }}
+                />
+            </div>
+
+            {/* TOTAL */}
+            <div className="flex justify-between text-gray-700 font-medium">
+                <span>Total</span>
+                <span>${totalPrice.toFixed(2)}</span>
+            </div>
+
+            {/* BUTTON */}
             <button
-                className="btn btn-primary mt-4"
                 type="submit"
-                disabled={!stripe || !clientSecret}
+                disabled={!stripe || !clientSecret || processing}
+                className={`w-full py-2 rounded-md text-white font-semibold transition 
+                ${processing
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-700"
+                    }`}
             >
-                Pay
+                {processing ? "Processing..." : `Pay $${totalPrice.toFixed(2)}`}
             </button>
 
-            <p className="text-red-600">{error}</p>
-
-            {transactionId && (
-                <p className="text-green-600">
-                    Transaction ID: {transactionId}
+            {/* ERROR */}
+            {error && (
+                <p className="text-red-500 text-sm text-center">
+                    {error}
                 </p>
             )}
         </form>

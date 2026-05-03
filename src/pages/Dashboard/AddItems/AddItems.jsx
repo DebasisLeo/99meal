@@ -13,8 +13,6 @@ const AddItems = () => {
 
     const onSubmit = async (data) => {
         try {
-            console.log(data);
-
             const formData = new FormData();
             formData.append("image", data.image[0]);
 
@@ -44,56 +42,63 @@ const AddItems = () => {
                     Swal.fire({
                         position: "top-end",
                         icon: "success",
-                        title: `${data.name} is added to the menu.`,
+                        title: `${data.name} added successfully`,
                         showConfirmButton: false,
                         timer: 1500,
                     });
-                } else {
-                    throw new Error("Insert failed");
                 }
             }
         } catch (error) {
-            console.log("Add item error:", error);
-
             Swal.fire({
                 icon: "error",
-                title: "Failed to add item",
+                title: "Failed",
                 text: error.message,
             });
         }
     };
 
     return (
-        <div className="container mx-auto p-4 sm:p-6 md:p-8">
-            <SectionTitle heading="Add an Item" subHeading="What's new?" />
+        <div className="min-h-screen bg-gray-50 py-10 px-4">
 
-           
-            <div>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-4xl mx-auto">
+            <SectionTitle heading="Add Item" subHeading="Create new menu item" />
 
-                    <div className="form-control w-full">
-                        <label className="label">
-                            <span className="label-text">Recipe Name*</span>
+            <div className="max-w-4xl mx-auto mt-8">
+
+                <form
+                    onSubmit={handleSubmit(onSubmit)}
+                    className="bg-white border shadow-md rounded-2xl p-8 space-y-6"
+                >
+
+                    {/* TITLE */}
+                    <h2 className="text-2xl font-bold text-gray-800 text-center">
+                        Add New Food Item
+                    </h2>
+
+                    {/* NAME */}
+                    <div>
+                        <label className="text-gray-700 font-medium">
+                            Recipe Name
                         </label>
                         <input
                             type="text"
                             {...register("name", { required: true })}
-                            className="input input-bordered w-full"
-                            placeholder="Recipe Name"
+                            placeholder="Enter recipe name"
+                            className="w-full mt-2 px-4 py-3 rounded-lg border border-gray-200 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                         />
                     </div>
 
-                    <div className="flex gap-6 sm:flex-col md:flex-row">
-                        <div className="form-control w-full">
-                            <label className="label">
-                                <span className="label-text">Category*</span>
+                    {/* CATEGORY + PRICE */}
+                    <div className="grid md:grid-cols-2 gap-6">
+
+                        <div>
+                            <label className="text-gray-700 font-medium">
+                                Category
                             </label>
                             <select
-                                defaultValue="default"
                                 {...register("category", { required: true })}
-                                className="select select-bordered w-full"
+                                className="w-full mt-2 px-4 py-3 rounded-lg border border-gray-200 text-gray-700 focus:ring-2 focus:ring-indigo-400"
                             >
-                                <option disabled value="default">Select a category</option>
+                                <option value="">Select category</option>
                                 <option value="salad">Salad</option>
                                 <option value="pizza">Pizza</option>
                                 <option value="soup">Soup</option>
@@ -102,46 +107,56 @@ const AddItems = () => {
                             </select>
                         </div>
 
-                        <div className="form-control w-full">
-                            <label className="label">
-                                <span className="label-text">Price*</span>
+                        <div>
+                            <label className="text-gray-700 font-medium">
+                                Price
                             </label>
                             <input
                                 type="number"
                                 {...register("price", { required: true })}
-                                className="input input-bordered w-full"
-                                placeholder="Price"
+                                placeholder="Enter price"
+                                className="w-full mt-2 px-4 py-3 rounded-lg border border-gray-200 text-gray-800 focus:ring-2 focus:ring-indigo-400"
                             />
                         </div>
+
                     </div>
 
-                    <div className="form-control w-full">
-                        <label className="label">
-                            <span className="label-text">Recipe Details</span>
+                    {/* DETAILS */}
+                    <div>
+                        <label className="text-gray-700 font-medium">
+                            Recipe Details
                         </label>
                         <textarea
                             {...register("recipe")}
-                            className="textarea textarea-bordered w-full"
-                            placeholder="Recipe Details"
+                            placeholder="Write description..."
+                            className="w-full mt-2 px-4 py-3 rounded-lg border border-gray-200 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-indigo-400 h-28"
                         />
                     </div>
 
-                    <div className="form-control w-full">
-                        <label className="label">
-                            <span className="label-text">Image*</span>
+                    {/* IMAGE */}
+                    <div>
+                        <label className="text-gray-700 font-medium">
+                            Image Upload
                         </label>
                         <input
                             type="file"
                             {...register("image", { required: true })}
-                            className="file-input w-full"
+                            className="w-full mt-2 border rounded-lg p-2 text-gray-700 file:bg-indigo-600 file:text-white file:px-4 file:py-2 file:rounded-lg file:border-0"
                         />
                     </div>
 
-                    <button type="submit" className="btn btn-primary w-full">
-                        Add Item <FaUtensils />
+                    {/* BUTTON */}
+                    <button
+                        type="submit"
+                        className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold py-3 rounded-xl shadow hover:scale-[1.02] transition"
+                    >
+                        <span className="flex items-center justify-center gap-2">
+                            Add Item <FaUtensils />
+                        </span>
                     </button>
 
                 </form>
+
             </div>
         </div>
     );

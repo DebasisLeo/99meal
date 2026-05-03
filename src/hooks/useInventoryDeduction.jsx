@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import useInventory, { adjustInventoryStock, getInventoryItems } from './useInventory'
 import { createPurchaseOrder, getPurchaseOrders } from './usePurchaseOrder'
+import { apiRequest } from '../utils/api'
 
 function resolveInventoryItem(items, identifier) {
   const normalizedIdentifier = String(identifier).toLowerCase()
@@ -27,7 +28,7 @@ export default function useInventoryDeduction() {
    * @param {Array} cartItems - Items in the cart, each with `ingredients` field
    * @returns {Object} { success: bool, deducted: bool, message: string, triggeredPOs: Array }
    */
-  const deductForOrder = useCallback((cartItems = []) => {
+  const deductForOrder = useCallback(async (cartItems = []) => {
     if (!cartItems || cartItems.length === 0) {
       return { success: false, message: 'No items in cart' }
     }
@@ -63,9 +64,24 @@ export default function useInventoryDeduction() {
       }
     }
 
-    Object.entries(ingredientMap).forEach(([sku, qty]) => {
+    for (const [sku, qty] of Object.entries(ingredientMap)) {
+      const inventoryItem = resolveInventoryItem(inventoryBefore, sku)
+      if (!inventoryItem) {
+        return {
+          success: false,
+          message: `Inventory item not found for ${sku}`,
+        }
+      }
+
+      const nextStock = Math.max(0, inventoryItem.stock - qty)
+
+      await apiRequest(`/ingredients/${inventoryItem.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ stock: nextStock }),
+      })
+
       adjustInventoryStock(sku, -qty)
-    })
+    }
 
     const inventoryAfter = getInventoryItems()
     const pendingPOs = getPurchaseOrders().filter((po) => po.status === 'pending')

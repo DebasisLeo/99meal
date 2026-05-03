@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import useAuth from "../../../hooks/useAuth";
 import axios from "axios";
 import { FaBook, FaDollarSign, FaUsers, FaUserCircle } from "react-icons/fa";
+
 import {
     BarChart,
     Bar,
@@ -12,7 +13,8 @@ import {
     PieChart,
     Pie,
     Legend,
-    Tooltip
+    Tooltip,
+    ResponsiveContainer
 } from "recharts";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A28CFF", "#FF6B6B"];
@@ -48,7 +50,7 @@ const AdminHome = () => {
     return (
         <div className="container mx-auto p-6">
 
-            {/* ================= ADMIN PROFILE SECTION ================= */}
+            {/* ================= PROFILE ================= */}
             <div className="flex flex-col items-center justify-center mb-10 bg-white p-6 rounded-xl shadow">
 
                 <div className="bg-gray-100 p-2 rounded-full shadow mb-3">
@@ -81,8 +83,8 @@ const AdminHome = () => {
                 Dashboard Overview
             </h2>
 
-            {/* STATS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* ================= STATS ================= */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
 
                 <div className="bg-indigo-600 text-white p-6 rounded shadow">
                     <FaDollarSign className="text-3xl mb-2" />
@@ -118,51 +120,82 @@ const AdminHome = () => {
 
             </div>
 
-            {/* CHARTS */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* ================= CHARTS ================= */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
 
+                {/* ================= BAR CHART ================= */}
                 <div className="bg-white p-4 rounded shadow">
                     <h3 className="text-lg font-semibold mb-4">
                         Order Quantity by Category
                     </h3>
 
-                    <BarChart width={500} height={300} data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="category" />
-                        <YAxis />
-                        <Tooltip />
+                    <div className="w-full h-[420px]">
+                        <ResponsiveContainer width="100%" height="100%">
 
-                        <Bar dataKey="quantity">
-                            {chartData.map((_, index) => (
-                                <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                        </Bar>
-                    </BarChart>
+                            <BarChart
+                                data={chartData}
+                                margin={{ top: 20, right: 20, left: 10, bottom: 60 }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" />
+
+                                <XAxis
+                                    dataKey="category"
+                                    angle={-35}
+                                    textAnchor="end"
+                                    interval={0}
+                                    height={70}
+                                />
+
+                                <YAxis />
+                                <Tooltip />
+
+                                <Bar dataKey="quantity">
+                                    {chartData.map((_, index) => (
+                                        <Cell
+                                            key={index}
+                                            fill={COLORS[index % COLORS.length]}
+                                        />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+
+                        </ResponsiveContainer>
+                    </div>
                 </div>
 
+                {/* ================= PIE CHART ================= */}
                 <div className="bg-white p-4 rounded shadow">
                     <h3 className="text-lg font-semibold mb-4">
                         Revenue Distribution
                     </h3>
 
-                    <PieChart width={400} height={350}>
-                        <Pie
-                            data={pieChartData}
-                            dataKey="value"
-                            nameKey="name"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={120}
-                            label
-                        >
-                            {pieChartData.map((_, index) => (
-                                <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                        </Pie>
+                    <div className="w-full h-[420px] flex justify-center items-center">
+                        <ResponsiveContainer width="100%" height="100%">
 
-                        <Tooltip />
-                        <Legend />
-                    </PieChart>
+                            <PieChart>
+                                <Pie
+                                    data={pieChartData}
+                                    dataKey="value"
+                                    nameKey="name"
+                                    cx="50%"
+                                    cy="50%"
+                                    outerRadius={120}
+                                    label
+                                >
+                                    {pieChartData.map((_, index) => (
+                                        <Cell
+                                            key={index}
+                                            fill={COLORS[index % COLORS.length]}
+                                        />
+                                    ))}
+                                </Pie>
+
+                                <Tooltip />
+                                <Legend />
+                            </PieChart>
+
+                        </ResponsiveContainer>
+                    </div>
                 </div>
 
             </div>
