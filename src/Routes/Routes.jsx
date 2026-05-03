@@ -24,136 +24,137 @@ import Kitchen from "../pages/Kitchen/Kitchen";
 import PurchaseOrder from "../pages/PurchaseOrder/PurchaseOrder";
 import StaffManagement from "../pages/StaffManagement/StaffManagement";
 import Supplier from "../pages/Supplier/Supplier";
-
+import Review from "../pages/Dashboard/Review/Review";
 
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <Main />,
-    errorElement:<NotFoundPage></NotFoundPage>,
+    errorElement: <NotFoundPage />,
     children: [
-      {
-        path: "/",
-        element: <Home />
-      },
-      {
-        path: "menu",
-        element: <Menu />
-      },
-      {
-        path: "inventory",
-        element: <Inventory />
-      },
-      {
-        path: "kitchen",
-        element: <Kitchen />
-      },
-      {
-        path: "purchase-orders",
-        element:<PurchaseOrder />
-      },
-      {
-        path: "staff",
-        element: <StaffManagement />
-      },
-      {
-        path: "suppliers",
-        element: <Supplier />
-      },
-      {
-        path: "supplier",
-        element:<Supplier />
-      },
+      { path: "/", element: <Home /> },
+      { path: "menu", element: <Menu /> },
+
+      { path: "inventory", element: <Inventory /> },
+      { path: "kitchen", element: <Kitchen /> },
+      { path: "purchase-orders", element: <PurchaseOrder /> },
+      { path: "staff", element: <StaffManagement /> },
+      { path: "suppliers", element: <Supplier /> },
+
       {
         path: "order/:category",
-        element: <PrivateRoute><Order /></PrivateRoute>
+        element: (
+          <PrivateRoute>
+            <Order />
+          </PrivateRoute>
+        )
       },
-      {
-        path: "login",
-        element: <Login />
-      },
-      {
-        path: "signup",
-        element: <SignUp />
-      }
+      { path: "login", element: <Login /> },
+      { path: "signup", element: <SignUp /> }
     ]
   },
+
   {
     path: "dashboard",
-    element: <PrivateRoute><Dashboard></Dashboard></PrivateRoute>,
+    element: (
+      <PrivateRoute>
+        <Dashboard />
+      </PrivateRoute>
+    ),
     children: [
-      {
-        path: "cart",
-        element: <Cart />
-      },
-      {
-        path: 'userHome',
-        element: <UserHome></UserHome>
-      },
-      {
-        path: 'payment',
-        element: <Payment></Payment>
-      },
-      {
-        path: 'checkout',
-        element: <Payment></Payment>
-      },
-      {
-        path: 'paymentHistory',
-        element: <PaymentHistory></PaymentHistory>
-      },
+      { path: "cart", element: <Cart /> },
+      { path: "userHome", element: <UserHome /> },
+      { path: "payment", element: <Payment /> },
+      { path: "checkout", element: <Payment /> },
+      { path: "paymentHistory", element: <PaymentHistory /> },
+      { path: "review", element: <Review /> },
 
       // admin only routes
       {
-        path: 'adminHome',
-        element: <AdminRoute><AdminHome></AdminHome></AdminRoute>
+        path: "adminHome",
+        element: (
+          <AdminRoute>
+            <AdminHome />
+          </AdminRoute>
+        )
       },
       {
         path: "users",
-        element: <AdminRoute><AllUsers></AllUsers></AdminRoute>
+        element: (
+          <AdminRoute>
+            <AllUsers />
+          </AdminRoute>
+        )
       },
       {
-        path: 'addItems',
-        element: <AdminRoute><AddItems></AddItems></AdminRoute>
+        path: "addItems",
+        element: (
+          <AdminRoute>
+            <AddItems />
+          </AdminRoute>
+        )
       },
       {
-        path: 'manageItems',
-        element: <AdminRoute><ManageItems></ManageItems></AdminRoute>
+        path: "manageItems",
+        element: (
+          <AdminRoute>
+            <ManageItems />
+          </AdminRoute>
+        )
       },
       {
-        path: 'updateItem/:id',
-        element: <AdminRoute><UpdateItem></UpdateItem></AdminRoute>,
-        loader: ({params}) => fetch(`http://localhost:8000/menu/${params.id}`)
+        path: "updateItem/:id",
+        element: (
+          <AdminRoute>
+            <UpdateItem />
+          </AdminRoute>
+        ),
+        loader: ({ params }) =>
+          fetch(`http://localhost:8000/menu/${params.id}`)
       },
-      {
-        path: "history",
-        element: <History></History>
-      },
+
+      { path: "history", element: <History /> },
+
       {
         path: "inventory",
-        element: <AdminRoute><Inventory /></AdminRoute>
+        element: (
+          <AdminRoute>
+            <Inventory />
+          </AdminRoute>
+        )
       },
       {
         path: "kitchen",
-        element: <AdminRoute><Kitchen /></AdminRoute>
+        element: (
+          <AdminRoute>
+            <Kitchen />
+          </AdminRoute>
+        )
       },
       {
         path: "purchase-orders",
-        element: <AdminRoute><PurchaseOrder /></AdminRoute>
+        element: (
+          <AdminRoute>
+            <PurchaseOrder />
+          </AdminRoute>
+        )
       },
       {
         path: "staff",
-        element: <AdminRoute><StaffManagement /></AdminRoute>
+        element: (
+          <AdminRoute>
+            <StaffManagement />
+          </AdminRoute>
+        )
       },
       {
         path: "suppliers",
-        element: <AdminRoute><Supplier /></AdminRoute>
-      },
-      {
-        path: "supplier",
-        element: <AdminRoute><Supplier /></AdminRoute>
+        element: (
+          <AdminRoute>
+            <Supplier />
+          </AdminRoute>
+        )
       }
-      
     ]
   }
 ]);

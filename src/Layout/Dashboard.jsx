@@ -15,7 +15,7 @@ const Dashboard = () => {
                     {isAdmin ? (
                         <>
                             <li>
-                            <NavLink to="/dashboard/adminHome" className="flex items-center gap-2">
+                                <NavLink to="/dashboard/adminHome" className="flex items-center gap-2">
                                     <FaHome />
                                     Admin Home
                                 </NavLink>
@@ -27,10 +27,13 @@ const Dashboard = () => {
                                     Add Items
                                 </NavLink>
                             </li>
-                            <li><NavLink to="/dashboard/manageItems" className="flex items-center gap-2">
+
+                            <li>
+                                <NavLink to="/dashboard/manageItems" className="flex items-center gap-2">
                                     <FaList />
                                     Manage Items
-                                </NavLink></li>
+                                </NavLink>
+                            </li>
 
                             <li>
                                 <NavLink to="/dashboard/users" className="flex items-center gap-2">
@@ -39,6 +42,7 @@ const Dashboard = () => {
                                 </NavLink>
                             </li>
 
+                            {/* KEEP LOCAL ADMIN FEATURES */}
                             <li>
                                 <NavLink to="/dashboard/kitchen" className="flex items-center gap-2">
                                     <FaClipboardCheck />

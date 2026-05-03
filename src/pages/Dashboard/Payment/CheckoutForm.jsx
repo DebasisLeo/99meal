@@ -32,7 +32,7 @@ const CheckoutForm = () => {
         price: item.price
     }));
 
-    // create payment intent
+   
     useEffect(() => {
         if (totalPrice > 0) {
             axiosPublic.post("/create-payment-intent", { price: totalPrice })
@@ -76,7 +76,7 @@ const CheckoutForm = () => {
             return;
         }
 
-        // ✅ PAYMENT SUCCESS
+     
         if (paymentIntent.status === "succeeded") {
 
             setTransactionId(paymentIntent.id);
@@ -91,7 +91,7 @@ const CheckoutForm = () => {
 
             const res = await axiosPublic.post("/payments", payment);
 
-            // ✅ FIXED RESPONSE CHECK
+            
             if (res.data?.insertedId) {
 
                 await Promise.all(
