@@ -21,7 +21,7 @@ import PaymentHistory from "../pages/Dashboard/PaymentHistory/PaymentHistory";
 import UserHome from "../pages/Dashboard/UserHome/UserHome";
 import Inventory from "../pages/Inventory/Inventory";
 import Kitchen from "../pages/Kitchen/Kitchen";
-import PurchaseOrder from "../pages/PurchaseOrder/PurchaseOrder";
+
 import StaffManagement from "../pages/StaffManagement/StaffManagement";
 import Supplier from "../pages/Supplier/Supplier";
 import Review from "../pages/Dashboard/Review/Review";
@@ -37,7 +37,7 @@ export const router = createBrowserRouter([
 
       { path: "inventory", element: <Inventory /> },
       { path: "kitchen", element: <Kitchen /> },
-      { path: "purchase-orders", element: <PurchaseOrder /> },
+      
       { path: "staff", element: <StaffManagement /> },
       { path: "suppliers", element: <Supplier /> },
 
@@ -131,14 +131,7 @@ export const router = createBrowserRouter([
           </AdminRoute>
         )
       },
-      {
-        path: "purchase-orders",
-        element: (
-          <AdminRoute>
-            <PurchaseOrder />
-          </AdminRoute>
-        )
-      },
+      
       {
         path: "staff",
         element: (

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import useAuth from "../../../hooks/useAuth";
 import axios from "axios";
-import { FaBook, FaDollarSign, FaUsers } from "react-icons/fa";
+import { FaBook, FaDollarSign, FaUsers, FaUserCircle } from "react-icons/fa";
 import {
     BarChart,
     Bar,
@@ -38,18 +38,47 @@ const AdminHome = () => {
         }
     });
 
-    // ================= PIE DATA =================
     const pieChartData = chartData.map(item => ({
         name: item.category,
         value: Number(item.revenue) || 0
     }));
 
+    const isValidImage = user?.photoURL && user.photoURL.startsWith("http");
+
     return (
         <div className="container mx-auto p-6">
 
+            {/* ================= ADMIN PROFILE SECTION ================= */}
+            <div className="flex flex-col items-center justify-center mb-10 bg-white p-6 rounded-xl shadow">
+
+                <div className="bg-gray-100 p-2 rounded-full shadow mb-3">
+                    {isValidImage ? (
+                        <img
+                            src={user.photoURL}
+                            alt="Admin"
+                            className="w-20 h-20 rounded-full object-cover"
+                        />
+                    ) : (
+                        <FaUserCircle className="text-gray-500 w-20 h-20" />
+                    )}
+                </div>
+
+                <h2 className="text-2xl font-bold text-gray-800">
+                    Welcome Admin {user?.displayName || "User"}
+                </h2>
+
+                <p className="text-sm text-gray-500 mt-1">
+                    Role: <span className="font-semibold text-red-500">Admin</span>
+                </p>
+
+                <p className="text-xs text-gray-400 mt-1">
+                    {user?.email}
+                </p>
+            </div>
+
             {/* HEADER */}
             <h2 className="text-3xl font-semibold text-center mb-8">
-                Hi, Welcome {user?.displayName || "Back"}
+                Dashboard Overview
             </h2>
 
             {/* STATS */}
@@ -92,7 +121,6 @@ const AdminHome = () => {
             {/* CHARTS */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-                {/* BAR CHART */}
                 <div className="bg-white p-4 rounded shadow">
                     <h3 className="text-lg font-semibold mb-4">
                         Order Quantity by Category
@@ -112,7 +140,6 @@ const AdminHome = () => {
                     </BarChart>
                 </div>
 
-                {/* PIE CHART */}
                 <div className="bg-white p-4 rounded shadow">
                     <h3 className="text-lg font-semibold mb-4">
                         Revenue Distribution

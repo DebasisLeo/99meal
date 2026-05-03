@@ -64,12 +64,7 @@ const Dashboard = () => {
                                 </NavLink>
                             </li>
 
-                            <li>
-                                <NavLink to="/dashboard/purchase-orders" className="flex items-center gap-2">
-                                    <FaList />
-                                    Purchase Orders
-                                </NavLink>
-                            </li>
+                           
 
                             <li>
                                 <NavLink to="/dashboard/staff" className="flex items-center gap-2">
